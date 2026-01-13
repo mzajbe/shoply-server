@@ -75,7 +75,9 @@ export const getById = async (
   next: NextFunction
 ) => {
   try {
-    const store = await getStoreById(req.params.id);
+    const store = await getStoreById(req.params.id as string);
+    console.log(store);
+    
 
     res.status(200).json({
       success: true,
