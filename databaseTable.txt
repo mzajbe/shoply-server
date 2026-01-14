@@ -1,0 +1,230 @@
+-- ================================
+-- SHOPLY PostgreSQL DATABASE SCHEMA
+-- ================================
+
+-- Enable UUID support
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ================================
+-- USERS
+-- ================================
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    name VARCHAR(150),
+    phone VARCHAR(20),
+    role VARCHAR(20) CHECK (role IN ('customer','seller','admin')) NOT NULL,
+    profile_image TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- STORES
+-- ================================
+CREATE TABLE stores (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    owner_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    store_name VARCHAR(255) NOT NULL,
+    store_description TEXT,
+    subdomain VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    business_type VARCHAR(100),
+    is_premium BOOLEAN DEFAULT FALSE,
+    premium_expiry DATE,
+    currency VARCHAR(10) DEFAULT 'USD',
+    status VARCHAR(20) CHECK (status IN ('active','inactive','suspended')) DEFAULT 'active',
+    total_products INT DEFAULT 0,
+    total_orders INT DEFAULT 0,
+    total_revenue NUMERIC(12,2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- CATEGORIES
+-- ================================
+CREATE TABLE categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    image TEXT,
+    slug VARCHAR(150),
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- PRODUCTS
+-- ================================
+CREATE TABLE products (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+    category_id UUID REFERENCES categories(id),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    sku VARCHAR(100),
+    price NUMERIC(10,2) NOT NULL,
+    compare_price NUMERIC(10,2),
+    cost NUMERIC(10,2),
+    stock INT DEFAULT 0,
+    low_stock_threshold INT DEFAULT 5,
+    status VARCHAR(20) CHECK (status IN ('active','draft','archived')) DEFAULT 'draft',
+    visibility VARCHAR(20) CHECK (visibility IN ('public','private')) DEFAULT 'public',
+    weight NUMERIC(8,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (store_id, sku)
+);
+
+-- ================================
+-- PRODUCT IMAGES
+-- ================================
+CREATE TABLE product_images (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL
+);
+
+-- ================================
+-- PRODUCT VARIANTS
+-- ================================
+CREATE TABLE product_variants (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    name VARCHAR(150),
+    sku VARCHAR(100),
+    price NUMERIC(10,2),
+    stock INT DEFAULT 0
+);
+
+-- ================================
+-- CUSTOMERS (PER STORE)
+-- ================================
+CREATE TABLE customers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id),
+    total_orders INT DEFAULT 0,
+    total_spent NUMERIC(12,2) DEFAULT 0,
+    last_order_date TIMESTAMP,
+    status VARCHAR(20) CHECK (status IN ('active','inactive')) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- CARTS
+-- ================================
+CREATE TABLE carts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id),
+    session_id VARCHAR(255),
+    is_guest BOOLEAN DEFAULT FALSE,
+    subtotal NUMERIC(10,2),
+    total NUMERIC(10,2),
+    expires_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- CART ITEMS
+-- ================================
+CREATE TABLE cart_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cart_id UUID REFERENCES carts(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id),
+    variant_id UUID REFERENCES product_variants(id),
+    quantity INT NOT NULL,
+    price NUMERIC(10,2) NOT NULL
+);
+
+-- ================================
+-- ORDERS
+-- ================================
+CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id),
+    status VARCHAR(20),
+    payment_status VARCHAR(20),
+    subtotal NUMERIC(12,2),
+    tax NUMERIC(10,2),
+    shipping NUMERIC(10,2),
+    total NUMERIC(12,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- ORDER ITEMS (SNAPSHOT)
+-- ================================
+CREATE TABLE order_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+    product_name VARCHAR(255),
+    variant_name VARCHAR(150),
+    quantity INT,
+    price NUMERIC(10,2),
+    total NUMERIC(12,2)
+);
+
+-- ================================
+-- TRANSACTIONS
+-- ================================
+CREATE TABLE transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID REFERENCES orders(id),
+    amount NUMERIC(12,2),
+    currency VARCHAR(10),
+    gateway VARCHAR(50),
+    status VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- COUPONS
+-- ================================
+CREATE TABLE coupons (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+    code VARCHAR(50) UNIQUE,
+    discount_type VARCHAR(20),
+    discount_value NUMERIC(10,2),
+    is_active BOOLEAN DEFAULT TRUE,
+    expires_at DATE
+);
+
+-- ================================
+-- THEMES
+-- ================================
+CREATE TABLE themes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
+    name VARCHAR(150),
+    is_active BOOLEAN DEFAULT FALSE,
+    is_premium BOOLEAN DEFAULT FALSE,
+    theme_data JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- REVIEWS
+-- ================================
+CREATE TABLE reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id),
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- INDEXES
+-- ================================
+CREATE INDEX idx_products_store ON products(store_id);
+CREATE INDEX idx_orders_store ON orders(store_id);
+CREATE INDEX idx_customers_store ON customers(store_id);
+CREATE INDEX idx_reviews_product ON reviews(product_id);
+CREATE INDEX idx_carts_expires ON carts(expires_at);
