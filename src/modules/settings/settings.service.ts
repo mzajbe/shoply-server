@@ -9,7 +9,8 @@ export const getSettings = async () => {
       currency: "USD",
       email: "",
       payment_stripe: false,
-      payment_paypal: false,
+      payment_sslcommerze: false,
+      payment_aamarpay: false,
       shipping_rate: "0.00",
       notifications_email: true,
     };
@@ -23,7 +24,8 @@ export const updateSettings = async (payload: {
   currency: string;
   email: string;
   payment_stripe: boolean;
-  payment_paypal: boolean;
+  payment_sslcommerze: boolean;
+  payment_aamarpay: boolean;
   shipping_rate: string;
   notifications_email: boolean;
 }) => {
@@ -32,7 +34,8 @@ export const updateSettings = async (payload: {
     currency,
     email,
     payment_stripe,
-    payment_paypal,
+    payment_sslcommerze,
+    payment_aamarpay,
     shipping_rate,
     notifications_email,
   } = payload;
@@ -46,16 +49,18 @@ export const updateSettings = async (payload: {
         currency=$2, 
         email=$3,
         payment_stripe=$4,
-        payment_paypal=$5,
-        shipping_rate=$6,
-        notifications_email=$7
-       WHERE id=$8`,
+        payment_sslcommerze=$5,
+        payment_aamarpay=$6,
+        shipping_rate=$7,
+        notifications_email=$8
+       WHERE id=$9`,
       [
         store_name,
         currency,
         email,
         payment_stripe,
-        payment_paypal,
+        payment_sslcommerze,
+        payment_aamarpay,
         shipping_rate,
         notifications_email,
         check.rows[0].id,
@@ -64,14 +69,15 @@ export const updateSettings = async (payload: {
   } else {
     await pool.query(
       `INSERT INTO store_settings (
-        store_name, currency, email, payment_stripe, payment_paypal, shipping_rate, notifications_email
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        store_name, currency, email, payment_stripe, payment_sslcommerze, payment_aamarpay, shipping_rate, notifications_email
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         store_name,
         currency,
         email,
         payment_stripe,
-        payment_paypal,
+        payment_sslcommerze,
+        payment_aamarpay,
         shipping_rate,
         notifications_email,
       ]

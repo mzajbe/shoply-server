@@ -25,7 +25,8 @@ export const update = async (
       currency,
       email,
       payment_stripe,
-      payment_paypal,
+      payment_sslcommerze,
+      payment_aamarpay,
       shipping_rate,
       notifications_email,
     } = req.body;
@@ -35,7 +36,8 @@ export const update = async (
       currency,
       email,
       payment_stripe,
-      payment_paypal,
+      payment_sslcommerze,
+      payment_aamarpay,
       shipping_rate,
       notifications_email,
     });

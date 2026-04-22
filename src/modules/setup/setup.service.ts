@@ -150,7 +150,8 @@ export async function setupDatabase() {
         currency VARCHAR(10) DEFAULT 'USD',
         email VARCHAR(255) DEFAULT 'support@shoply.com',
         payment_stripe BOOLEAN DEFAULT false,
-        payment_paypal BOOLEAN DEFAULT false,
+        payment_sslcommerze BOOLEAN DEFAULT false,
+        payment_aamarpay BOOLEAN DEFAULT false,
         shipping_rate VARCHAR(50) DEFAULT '0.00',
         notifications_email BOOLEAN DEFAULT true
       );
@@ -257,8 +258,8 @@ export async function setupDatabase() {
     if (parseInt(settingsCheck.rows[0].count) === 0) {
       console.log("Seeding settings...");
       await client.query(
-        "INSERT INTO store_settings (store_name, currency, email, payment_stripe, payment_paypal, shipping_rate, notifications_email) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-        ["My Awesome Store", "USD", "admin@example.com", true, false, "15.00", true]
+        "INSERT INTO store_settings (store_name, currency, email, payment_stripe, payment_sslcommerze, payment_aamarpay, shipping_rate, notifications_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+        ["My Awesome Store", "USD", "admin@example.com", true, false, false, "15.00", true]
       );
     }
 
