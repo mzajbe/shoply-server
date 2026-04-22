@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
+import { uploadToCloudinary } from "../../utils/cloudinary.js";
 
 export const upload = async (
   req: Request,
@@ -13,7 +14,14 @@ export const upload = async (
     }
 
     const id = crypto.randomUUID();
-    const url = `/uploads/media/${req.file.filename}`;
+    let url = `/uploads/media/${req.file.filename}`;
+
+    try {
+      url = await uploadToCloudinary(req.file.path, "shoply_media");
+    } catch (err) {
+      res.status(500).json({ message: "Image upload failed" });
+      return;
+    }
 
     res.status(201).json({
       id,

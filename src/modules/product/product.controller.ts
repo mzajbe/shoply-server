@@ -5,6 +5,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "./product.service.js";
+import { uploadToCloudinary } from "../../utils/cloudinary.js";
 
 function parseStock(value: unknown): number {
   if (typeof value === "number") return value;
@@ -42,13 +43,19 @@ export const create = async (
       return;
     }
 
-    // If file was uploaded via multer
-    const uploadedImageUrl = req.file
-      ? `/uploads/${req.file.filename}`
-      : null;
+    // If file was uploaded via multer, upload to cloudinary
+    let uploadedImageUrl = imageUrl || null;
+    if (req.file) {
+      try {
+        uploadedImageUrl = await uploadToCloudinary(req.file.path, "shoply_products");
+      } catch (err) {
+        res.status(500).json({ message: "Image upload failed" });
+        return;
+      }
+    }
 
     const result = await createProduct(
-      { name, sku, category, price, stock, status: status || "Active", imageUrl },
+      { name, sku, category, price, stock, status: status || "Active", imageUrl: uploadedImageUrl },
       uploadedImageUrl
     );
 
@@ -77,13 +84,19 @@ export const update = async (
       return;
     }
 
-    const uploadedImageUrl = req.file
-      ? `/uploads/${req.file.filename}`
-      : null;
+    let uploadedImageUrl = imageUrl || null;
+    if (req.file) {
+      try {
+        uploadedImageUrl = await uploadToCloudinary(req.file.path, "shoply_products");
+      } catch (err) {
+        res.status(500).json({ message: "Image upload failed" });
+        return;
+      }
+    }
 
     await updateProduct(
       id,
-      { name, sku, category, price, stock, status: status || "Active", imageUrl },
+      { name, sku, category, price, stock, status: status || "Active", imageUrl: uploadedImageUrl },
       uploadedImageUrl
     );
 
