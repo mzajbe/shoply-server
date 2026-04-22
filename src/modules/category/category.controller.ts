@@ -65,7 +65,7 @@ export const listByStore = async (
 ) => {
   try {
     const categories = await listCategoriesByStore(
-      req.params.storeId
+      String(req.params.storeId)
     );
 
     res.status(200).json({
@@ -84,7 +84,7 @@ export const getById = async (
   next: NextFunction
 ) => {
   try {
-    const category = await getCategoryById(req.params.id);
+    const category = await getCategoryById(String(req.params.id));
 
     res.status(200).json({
       success: true,
@@ -102,7 +102,7 @@ export const update = async (
   next: NextFunction
 ) => {
   try {
-    const category = await updateCategory(req.params.id, req.body);
+    const category = await updateCategory(String(req.params.id), req.body);
 
     res.status(200).json({
       success: true,
@@ -120,7 +120,7 @@ export const remove = async (
   next: NextFunction
 ) => {
   try {
-    const result = await deleteCategory(req.params.id);
+    const result = await deleteCategory(String(req.params.id));
 
     res.status(200).json({
       success: true,

@@ -7,7 +7,7 @@ export const registerUser = async (payload: {
   password: string;
   name?: string;
   phone?: string;
-  role: "customer" | "seller";
+  role?: "customer" | "seller";
 }) => {
   const { email, password, name, phone, role } = payload;
 
@@ -25,8 +25,8 @@ export const registerUser = async (payload: {
   const result = await pool.query(
     `INSERT INTO users (email, password, name, phone, role)
      VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, email, role`,
-    [email, hashedPassword, name, phone, role]
+     RETURNING id, email, name, role`,
+    [email, hashedPassword, name || null, phone || null, role || "customer"]
   );
 
   const user = result.rows[0];
@@ -46,7 +46,7 @@ export const loginUser = async (payload: {
   const { email, password } = payload;
 
   const result = await pool.query(
-    "SELECT id, email, password, role FROM users WHERE email = $1",
+    "SELECT id, email, password, name, role FROM users WHERE email = $1",
     [email]
   );
 
@@ -70,7 +70,21 @@ export const loginUser = async (payload: {
     role: user.role,
   });
 
-  delete user.password;
+  // Remove password from response
+  const { password: _, ...userInfo } = user;
 
-  return { user, token };
+  return { user: userInfo, token };
+};
+
+export const getUserById = async (userId: string) => {
+  const result = await pool.query(
+    "SELECT id, name, email, role FROM users WHERE id = $1",
+    [userId]
+  );
+
+  if (!result.rowCount) {
+    return null;
+  }
+
+  return result.rows[0];
 };

@@ -75,7 +75,7 @@ export const getById = async (
   next: NextFunction
 ) => {
   try {
-    const store = await getStoreById(req.params.id as string);
+    const store = await getStoreById(String(req.params.id));
     console.log(store);
     
 
@@ -95,7 +95,7 @@ export const getBySubdomain = async (
   next: NextFunction
 ) => {
   try {
-    const store = await getStoreBySubdomain(req.params.subdomain);
+    const store = await getStoreBySubdomain(String(req.params.subdomain));
 
     res.status(200).json({
       success: true,
@@ -113,7 +113,7 @@ export const listByOwner = async (
   next: NextFunction
 ) => {
   try {
-    const stores = await getStoresByOwner(req.params.ownerId);
+    const stores = await getStoresByOwner(String(req.params.ownerId));
 
     res.status(200).json({
       success: true,
@@ -131,7 +131,7 @@ export const update = async (
   next: NextFunction
 ) => {
   try {
-    const store = await updateStore(req.params.id, req.body);
+    const store = await updateStore(String(req.params.id), req.body);
 
     res.status(200).json({
       success: true,
@@ -149,7 +149,7 @@ export const remove = async (
   next: NextFunction
 ) => {
   try {
-    const result = await deleteStore(req.params.id);
+    const result = await deleteStore(String(req.params.id));
 
     res.status(200).json({
       success: true,
